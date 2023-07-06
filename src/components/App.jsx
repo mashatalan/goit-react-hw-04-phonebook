@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { nanoid } from 'nanoid';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -26,112 +26,103 @@ const notification = (message) => {
   });
 };
 
-class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+function App() {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if (prevState.contacts !== this.state.contacts) {
-      localStorage.setItem(LS_KEY, JSON.stringify(this.state.contacts));
+  useEffect(() => {
+    if (contacts.length > 0) {
+      localStorage.setItem(LS_KEY, JSON.stringify(contacts));
     }
-  }
 
-  componentDidMount() {
+  }, [contacts]);
+
+  useEffect(() => {
     const savedContacts = JSON.parse(localStorage.getItem(LS_KEY));
-    if (savedContacts) {
-      this.setState({ contacts: savedContacts });
+
+    if (savedContacts && savedContacts.length > 0) {
+      setContacts(savedContacts);
     }
-  }
 
-  isContactUnique = (newName) => {
-    return this.state.contacts.some(({ name }) => name === newName);
+  }, []);
+  const isContactUnique = (newName) => {
+    return contacts.some(({ name }) => name === newName);
+
   };
-
-  validateName = (name) => {
+  const validateName = (name) => {
     const namePattern = /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/;
     return namePattern.test(name);
-  };
 
-  validateNumber = (number) => {
+  };
+  const validateNumber = (number) => {
     const numberPattern = /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/;
     return numberPattern.test(number);
-  };
 
-  addContact = (newName, number) => {
-    if (this.isContactUnique(newName)) {
+  };
+  const addContact = (newName, number) => {
+    if (isContactUnique(newName)) {
       notification(`${newName} is already in contacts.`);
       return;
-    }
 
-    if (!this.validateName(newName)) {
+    }
+    if (!validateName(newName)) {
       notification('Please enter a valid name');
       return;
-    }
 
-    if (!this.validateNumber(number)) {
+    }
+    if (!validateNumber(number)) {
       notification('Please enter a valid phone number');
       return;
     }
-
     const newContact = {
       id: nanoid(),
       name: newName,
       number,
     };
+    setContacts([newContact, ...contacts]);
+    console.log(contacts);
 
-    this.setState(prevState => ({
-      contacts: [newContact, ...prevState.contacts],
-    }));
   };
-
-  deleteContact = contactId => {
-    const deletedContact = this.state.contacts.find(contact => contact.id === contactId);
+  const deleteContact = contactId => {
+    const deletedContact = contacts.find(contact => contact.id === contactId);
     if (deletedContact) {
       const { name } = deletedContact;
-      this.setState(({ contacts }) => ({
-        contacts: contacts.filter(contact => contact.id !== contactId),
-      }));
+      setContacts(contacts.filter(contact => contact.id !== contactId));
       notification(`Deleted contact: ${name}`);
     }
+
+  };
+  const changeFilter = evt => {
+    setFilter(`${evt.currentTarget.value}`);
+
   };
 
-  changeFilter = evt => {
-    this.setState({ filter: evt.currentTarget.value });
-  };
 
-  filterList = () => {
-    const { contacts, filter } = this.state;
+  const filteredContacts = useMemo(() => {
     const normalizedFilter = filter.toLowerCase();
-    return contacts.filter(contact =>
+    return contacts.filter((contact) =>
       contact.name.toLowerCase().includes(normalizedFilter),
     );
-  };
+  }, [contacts, filter]);
 
-  render() {
-    const { filter } = this.state;
-    const filteredContacts = this.filterList();
+  return (
+    <Container>
+      <h1>Phonebook</h1>
+      <Phonebook onAddContact={addContact} />
 
-    return (
-      <Container>
-        <h1>Phonebook</h1>
-        <Phonebook onAddContact={this.addContact} />
-
-        <h2>Contacts</h2>
-        <Filter value={filter} onChange={this.changeFilter} />
-        {filteredContacts.length > 0 ? (
-          <ContactList
-            contacts={filteredContacts}
-            onDeleteContact={this.deleteContact}
-          />
-        ) : (
-          <p>No contacts found</p>
-        )}
-        <ToastContainer />
-      </Container>
-    );
-  }
+      <h2>Contacts</h2>
+      <Filter value={filter} onChange={changeFilter} />
+      {filteredContacts.length > 0 ? (
+        <ContactList
+          contacts={filteredContacts}
+          onDeleteContact={deleteContact}
+        />
+      ) : (
+        <p>No contacts found</p>
+      )}
+      <ToastContainer />
+    </Container>
+  );
 }
 
 export default App;

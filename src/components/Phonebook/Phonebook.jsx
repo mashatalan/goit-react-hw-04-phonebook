@@ -1,66 +1,63 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Button, Form, FormLabel, Input } from './Phonebook.styled';
 
-class Phonebook extends Component {
-  state = {
-    name: '',
-    number: '',
-  };
+function Phonebook({ onAddContact }) {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
 
-  handleChangeContact = event => {
+  const handleChangeContact = event => {
     const { name, value } = event.currentTarget;
-    this.setState({
-      [name]: value,
-    });
+    if (name === 'name') {
+      setName(value);
+    } else if (name === 'number') {
+      setNumber(value);
+    }
   };
 
-  handleSubmit = (event) => {
-    const { name, number } = this.state;
+  const handleSubmit = (event) => {
     event.preventDefault();
-    this.props.onAddContact(name, number);
-    this.resetForm();
+    onAddContact(name, number);
+    resetForm();
   };
 
-  resetForm = () => {
-    this.setState({
-      name: '',
-      number: '',
-    });
+
+  const resetForm = () => {
+    setName('');
+    setNumber('');
   };
 
-  render() {
-    const { name, number } = this.state;
-    return (
-      <Form onSubmit={this.handleSubmit}>
-        <FormLabel>
-          Name
-          <Input
-            type='text'
-            name='name'
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-            required
-            value={name}
-            onChange={this.handleChangeContact}
-          />
-        </FormLabel>
-        <FormLabel>
-          Number
-          <Input
-            type='tel'
-            name='number'
-            pattern='\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}'
-            title='Phone number must be digits and can contain spaces, dashes, parentheses and can start with +'
-            required
-            value={number}
-            onChange={this.handleChangeContact}
-          />
-        </FormLabel>
-        <Button type='submit'>Add contact</Button>
-      </Form>
-    );
-  }
+
+  return (
+    <Form onSubmit={handleSubmit}>
+      <FormLabel>
+        Name
+        <Input
+          type='text'
+          name='name'
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+          required
+          value={name}
+          onChange={handleChangeContact}
+        />
+      </FormLabel>
+      <FormLabel>
+        Number
+        <Input
+          type='tel'
+          name='number'
+          pattern='\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}'
+          title='Phone number must be digits and can contain spaces, dashes, parentheses and can start with +'
+          required
+          value={number}
+          onChange={handleChangeContact}
+        />
+      </FormLabel>
+      <Button type='submit'>Add contact</Button>
+    </Form>
+  );
+
 }
 
 Phonebook.propType = {
